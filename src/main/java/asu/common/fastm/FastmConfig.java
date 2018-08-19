@@ -1,6 +1,7 @@
 package asu.common.fastm;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -11,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
+import net.fastm.Parser;
 import net.fastm.TemplateLoader;
 import org.xml.sax.SAXException;
 
@@ -304,5 +306,10 @@ public class FastmConfig {
 
     public static void setTemplateDir(String templateDir) {
         FastmConfig.templateDir = templateDir;
+        try {
+            Parser.setParserContext(templateDir);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

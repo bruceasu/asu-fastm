@@ -37,7 +37,7 @@
     
 	<!-- @# comment -->
     this is comment text.
-    <!--@% comment -->     
+    <!-- @% comment -->     
     ```
     	
 	```javascript
