@@ -1,0 +1,26 @@
+<!-- @if ${name}!="" --> ${name} <!-- @end ${name}!="" -->
+<!-- @if ${name}=="" --> ${name2} <!-- @end ${name}=="" -->
+
+
+// @if ${name}!=""
+${name}
+// @end ${name}!=""
+
+// @if ${name}==""
+${name2}
+// @end ${name}==""
+
+list1: <ul>
+<!-- @for list -->
+    <li>${x}</li>
+<!-- @done list -->
+        </ul>
+list2
+<ul>
+    <!-- @for list2 -->
+    <li>${x}</li>
+    <!-- @done list2 -->
+</ul>
+<!-- @# comment -->
+this is comment
+<!-- @% comment -->

@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="gb2312"?>
+<!-- 
+本模板文件提供了以下功能： 
+1.编译java代码； 
+2.产生java代码对应的javaDoc； 
+3.检查java代码的编码规范； 
+4.编译并运行java代码对应的junit测试代码 
+5.从Vss中获取程序 
+-->
+<project name="asu_fastm" default="build" basedir=".">
+
+	<!-- 环境变量 -->
+	<property environment="env" />
+	<property name="VERSION" value="1.0" />
+	<!-- 源代码目录 -->
+	<property name="src" value="src/main/java" />
+	<property name="resources" value="src/main/resources" />
+	<!-- 引用包所在目录 -->
+	<property name="lib.dir" value="lib" />
+	<!-- 目标jar名称 -->
+	<property name="lib.jar" value="asu-fastm-${VERSION}.jar" />
+	<property name="src.zip" value="asu-fastm-src-${VERSION}.zip" />
+	<property name="Author" value="Suk Honzeon" />
+	<property name="SPECIFICATION-VERSION" value="${VERSION}" />
+	<property name="IMPLEMENTATION-VERSION" value="${VERSION}" />
+	
+	<!-- 输出二进制文件 -->
+	<property name="dist.root" value="target" />
+	<property name="dist.classes.dir" value="${dist.root}/classes" />
+
+
+	<!-- ivy properties used -->
+	<property name="publish.version" value="${VERSION}" />
+	<property name="source.version" value="1.6" />
+	<property name="target.version" value="1.6" />
+	<property name="build.debug" value="true" />
+	<property name="source.encoding" value="utf-8" />
+	
+	<!-- classpath -->
+	<path id="classpath">
+		<fileset dir="${lib.dir}">
+			<include name="**/**/*.jar" />
+		</fileset>
+		<pathelement path="${dist.classes.dir}" />
+	</path>
+
+	<target name="init">
+		<echo message="initial" />
+		<mkdir dir="${dist.root}" />
+		<mkdir dir="${dist.classes.dir}" />
+	</target>
+
+	<target name="build" depends="compile">
+		<echo message="build all" />
+		<tstamp>
+            <format property="jar.time" pattern="MM/dd/yyyy hh:mm aa" locale="en" />
+	    </tstamp>
+	    <buildnumber />
+		<jar jarfile="${dist.root}/${lib.jar}" basedir="${dist.classes.dir}">
+			<include name="**/*.class" />
+			<fileset dir="${resources}" 
+				includes="**/*.properties,**/*.xml">
+			</fileset>
+			<manifest>
+				<attribute name="Author" value="${Author}" />
+				<attribute name="Built-By" value="${Author}"/>
+				<attribute name="Build-Version" value="${publish.version}" />
+                <attribute name="Build-On" value="${jar.time}" />
+                <attribute name="Build-Number" value="${build.number}" />
+				<attribute name="Specification-Version" value="${SPECIFICATION-VERSION}" />
+				<attribute name="Implementation-Version" value="${IMPLEMENTATION-VERSION}" />
+				<!--
+				<attribute name="Main-Class" value="" />
+				<attribute name="Class-Path" value="axis.jar commons-discovery-0.2.jar commons-logging.jar jaxrpc.jar saaj.jar wsdl4j-1.5.1.jar"/>
+				-->
+			</manifest>
+		</jar>
+		<!--
+		<copy file="${dist.lib.dir}/${lib.jar}" tofile="${dist.lib.dir}/asu-common.jar"/>
+		-->
+		<echo message="done">
+		</echo>
+	</target>
+
+	<!-- 编译源文件 -->
+	<target name="compile" depends="init" 
+		description="compile the sources">
+		<echo message="compiling ..." />
+		<mkdir dir="${dist.classes.dir}" />
+				<javac destdir="${dist.classes.dir}" encoding="${source.encoding}"
+						optimize="true" debug="${build.debug}"
+						source="${source.version}" target="${target.version}">
+					<src path="${src}" />
+					<classpath refid="classpath" />
+				</javac>
+				<echo message="compile done!" />
+		<copy todir="${dist.classes.dir}">
+			<fileset dir="${resources}" 
+				includes="**/*.properties,**/*.xml">
+			</fileset>
+		</copy>
+	</target>
+	
+	<!-- package 源文件 -->
+	<target name="src" depends="init" description="package all the sources">
+		<echo message="package src" />
+		<mkdir dir="${dist.root}" />
+		<zip destfile="${dist.root}/${src.zip}">
+			<!-- 
+			<zipfileset dir="htdocs/manual" prefix="docs/user-guide" />
+			<zipfileset dir="htdocs/manual2" excludes="**/*.java" prefix="docs/user-guide2" />			
+			<zipfileset dir="." includes="ChangeLog27.txt" fullpath="docs/ChangeLog.txt" />
+			<zipfileset src="examples.zip" includes="**/*.html" prefix="docs/examples" />
+			-->
+			<zipfileset dir="${src}" />
+			<zipfileset dir="${resources}" />
+		</zip>
+	</target>
+
+
+	<!-- 清除产生的类、junit相关类、文档 -->
+	<target name="clean">
+		<delete dir="${dist.root}" />
+	</target>
+
+</project>

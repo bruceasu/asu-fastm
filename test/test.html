@@ -1,0 +1,54 @@
+<html>
+<!-- @# noshow -->
+this is will not be display!
+<!-- @% noshow -->
+<body>
+<h1>abc</h1>
+<ul>
+    <!-- @for list -->
+    <!-- @for x -->
+    <li d='x'>${name}</li>
+    <!-- @done x -->
+    <!-- @for y -->
+    <li d='y'>${name}</li>
+    <!-- @done y -->
+
+    <!-- @done list -->
+</ul>
+
+<!-- @if ${A}==3 -->
+H2 --- H2
+<!-- @end ${A}==3 -->
+
+<!-- @if ${B}=="true"-->
+H3 --- H3
+<!-- @end ${B}=="true"-->
+
+${include a.htm}
+
+----------------------------
+
+${asChildInclude m a.htm}
+
+<script type="text/javascript">
+    // @for list
+    // @for x
+    /*   ======${name}   */
+    // @done x
+    // @for y
+    /* ${name}*/
+    // @done y
+
+    // @done list
+
+    // @if ${A} == 3
+    alert(1);
+    // @end ${A} == 3
+
+   // @if ${B}=="true"
+   /* H3 --- H3 */
+   // @end ${B}=="true"
+</script>
+
+</body>
+</html>
