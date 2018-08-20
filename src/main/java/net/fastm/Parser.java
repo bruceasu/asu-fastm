@@ -1,6 +1,5 @@
 package net.fastm;
 
-import asu.common.fastm.FastmConfig;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -16,6 +15,15 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import net.util.FileEncodingUtils;
 
+/**
+ * <p>Title: Fast Template</p>
+ * <p>Description: Fast Template For XML File (Using XML Comment as Tag)</p>
+ * <p>Copyright: Copyright (c) 2004</p>
+ *
+ * @author suk
+ * @author Wang Hailong
+ * @version 1.0
+ */
 public class Parser {
 
     /**
@@ -30,8 +38,6 @@ public class Parser {
         int end   = 0;
     }
 
-    ;
-
     public static class Token {
 
         /**
@@ -42,47 +48,47 @@ public class Parser {
         /**
          * indicate this is a normal static string
          */
-        public static final int ORDINARY = 0;
+        static final int ORDINARY = 0;
 
-        public static final int BEGIN = 10;
+        static final int BEGIN = 10;
 
-        public static final int End = 20;
+        static final int End = 20;
 
-        public static final int DYNAMIC = 1;
+        static final int DYNAMIC = 1;
 
-        public static final int IGNORED = 2;
+        static final int IGNORED = 2;
 
-        public static final int If = 3;
-
-        /**
-         * indicate the string is like <!-- @for name -->
-         */
-        public static final int BEGIN_FOR = BEGIN + DYNAMIC;
+        static final int CONDITION = 3;
 
         /**
-         * indicate the string is like <!-- @done name -->
+         * indicate the string is like <!-- BEGIN DYNAMIC: name -->
          */
-        public static final int END_FOR = End + DYNAMIC;
+        static final int BEGIN_DYNAMIC = BEGIN + DYNAMIC;
 
         /**
-         * indicate the string is like <!-- @# name -->
+         * indicate the string is like <!-- END DYNAMIC: name -->
          */
-        public static final int BEGIN_IGNORED = BEGIN + IGNORED;
+        static final int END_DYNAMIC = End + DYNAMIC;
 
         /**
-         * indicate the string is like <!-- @% name -->
+         * indicate the string is like <!-- BEGIN IGNORED: name -->
          */
-        public static final int END_IGNORED = End + IGNORED;
+        static final int BEGIN_IGNORED = BEGIN + IGNORED;
 
         /**
-         * indicate the string is like <!-- @if condition -->
+         * indicate the string is like <!-- END IGNORED: name -->
          */
-        public static final int BEGIN_IF = BEGIN + If;
+        static final int END_IGNORED = End + IGNORED;
 
         /**
-         * indicate the string is like <!-- @end condition -->
+         * indicate the string is like <!-- BEGIN CONDITION: condition -->
          */
-        public static final int END_IF = End + If;
+        static final int BEGIN_CONDITION = BEGIN + CONDITION;
+
+        /**
+         * indicate the string is like <!-- END CONDITION: condition -->
+         */
+        static final int END_CONDITION = End + CONDITION;
 
         /**
          * to indicate if this line is a comment definition, or has variable, or
@@ -102,42 +108,48 @@ public class Parser {
     }
 
 
-    public static final String START_TAG = "<!--";
-    public static final String STOP_TAG  = "-->";
-    public static final String START     = "${";
-    public static final String END       = "}";
+    static final String START_TAG = "<!--";
+    static final String STOP_TAG  = "-->";
+    static final String START     = "${";
+    static final String END       = "}";
+
+    static final Pattern COMMENT_PATTERN   = Pattern.compile("\\s*<!--.*-->\\s*");
+    static final Pattern BEGIN_FOR_PATTERN = Pattern
+            .compile("\\s*BEGIN\\s*DYNAMIC\\s*:\\s*([^\\s]+)\\s*");
+    static final Pattern END_FOR_PATTERN   = Pattern
+            .compile("\\s*END\\s*DYNAMIC\\s*:\\s*([^\\s]+)\\s*");
+
+    static final Pattern BEGIN_IGN_PATTERN = Pattern
+            .compile("\\s*BEGIN\\s*IGNORED\\s*:\\s*([^\\s]*)\\s*");
+    static final Pattern END_IGN_PATTERN   = Pattern
+            .compile("\\s*END\\s*IGNORED\\s*:\\s*([^\\s]*)\\s*");
+
+    static final Pattern BEGIN_CONDITION_PATTERN = Pattern
+            .compile("\\s*BEGIN\\s*CONDITION\\s*:\\s*([^\\s]*)\\s*");
+    static final Pattern END_CONDITION_PATTERN   = Pattern
+            .compile("\\s*END\\s*CONDITION\\s*:\\s*([^\\s]*)\\s*");
+
+    static final Pattern BEGIN_FOR_PATTERN_SCRIPT = Pattern
+            .compile("\\s*//\\s*BEGIN\\s*DYNAMIC\\s*:\\s*([^\\s]*)\\s*");
+    static final Pattern END_FOR_PATTERN_SCRIPT   = Pattern
+            .compile("\\s*//\\s*END\\s*DYNAMIC\\s*:\\s*([^\\s]*)\\s*");
+
+    static final Pattern BEGIN_IGN_PATTERN_SCRIPT = Pattern
+            .compile("\\s*//\\s*BEGIN\\s*IGNORED\\s*:\\s*([^\\s]*)\\s*");
+    static final Pattern END_IGN_PATTERN_SCRIPT   = Pattern
+            .compile("\\s*//\\*END\\s*IGNORED\\s*:\\s*([^\\s]*)\\s*");
+
+    static final Pattern BEGIN_CONDITION_PATTERN_SCRIPT = Pattern
+            .compile("\\s*//\\s*BEGIN\\s*CONDITION\\s*:\\s*(.+)\\s*");
+    static final Pattern END_CONDITION_PATTERN_SCRIPT   = Pattern
+            .compile("\\s*//\\s*END\\s*CONDITION\\s*:\\s*(.+)\\s*");
 
 
-    public static final Pattern BEGIN_FOR_PATTERN = Pattern.compile("\\s*@for\\s+([^\\s]*)\\s*");
-    public static final Pattern END_FOR_PATTERN   = Pattern.compile("\\s*@done\\s+([^\\s]*)\\s*");
+    private static final Pattern[] PATTERN_GROUP = {BEGIN_FOR_PATTERN, END_FOR_PATTERN,
+            BEGIN_IGN_PATTERN, END_IGN_PATTERN, BEGIN_CONDITION_PATTERN, END_CONDITION_PATTERN};
 
-    public static final Pattern BEGIN_IGN_PATTERN = Pattern.compile("\\s*@#\\s+([^\\s]*)\\s*");
-    public static final Pattern END_IGN_PATTERN   = Pattern.compile("\\s*@%\\s+([^\\s]*)\\s*");
-
-    public static final Pattern BEGIN_IF_PATTERN = Pattern.compile("\\s*@if\\s+([^\\s]*)\\s*");
-    public static final Pattern END_IF_PATTERN   = Pattern.compile("\\s*@end\\s+([^\\s]*)\\s*");
-
-    public static final Pattern BEGIN_FOR_PATTERN_SCRIPT = Pattern
-            .compile("\\s*//\\s*@for\\s+([^\\s]*)\\s*");
-    public static final Pattern END_FOR_PATTERN_SCRIPT   = Pattern
-            .compile("\\s*//\\s*@done\\s+([^\\s]*)\\s*");
-
-    public static final Pattern BEGIN_IGN_PATTERN_SCRIPT = Pattern
-            .compile("\\s*//\\s*@#\\s*([^\\s]*)\\s*");
-    public static final Pattern END_IGN_PATTERN_SCRIPT   = Pattern
-            .compile("\\s*//\\*@%\\s*([^\\s]*)\\s*");
-
-    public static final Pattern BEGIN_IF_PATTERN_SCRIPT = Pattern
-            .compile("\\s*//\\s*@if\\s+(.+)\\s*");
-    public static final Pattern END_IF_PATTERN_SCRIPT   = Pattern
-            .compile("\\s*//\\s*@end\\s+(.+)\\s*");
-
-
-    public static final Pattern[] PATTERN_GROUP = {BEGIN_FOR_PATTERN, END_FOR_PATTERN,
-            BEGIN_IGN_PATTERN, END_IGN_PATTERN, BEGIN_IF_PATTERN, END_IF_PATTERN};
-
-    public static final int[] TYPE_GROUP = {Token.BEGIN_FOR, Token.END_FOR,
-            Token.BEGIN_IGNORED, Token.END_IGNORED, Token.BEGIN_IF, Token.END_IF};
+    private static final int[] TYPE_GROUP = {Token.BEGIN_DYNAMIC, Token.END_DYNAMIC,
+            Token.BEGIN_IGNORED, Token.END_IGNORED, Token.BEGIN_CONDITION, Token.END_CONDITION};
 
     private static String PARSER_CONTEXT;
 
@@ -204,8 +216,12 @@ public class Parser {
     }
 
     /**
-     * parse the template
+     * parse a BufferedReader to template
+     *
+     * @param reader BufferedReader
+     * @return ITemplate
      */
+
     public static ITemplate parse(final BufferedReader reader) throws IOException {
         StringBuffer staticLines = new StringBuffer();
         Stack<DynamicPart> stack = new Stack<DynamicPart>();
@@ -291,8 +307,10 @@ public class Parser {
             // parse a line
             Token token = parseLine(line);
 
-            // ignore block between <!-- @# name -->
-            // <!-- @% name-->
+            // ignore block between
+            // <!-- BEGIN IGNORED: name -->
+            // and
+            // <!-- END IGNORED: name-->
 
             // if End of the IgnoredPart, then back to normal procedure
             if (ignoredName != null) {
@@ -315,52 +333,61 @@ public class Parser {
                 // create a StaticPart to hold the curret static lines in buf.
                 staticPart = new StaticPart(staticLines.toString());
                 top.addStep(staticPart);
-                staticLines.setLength(0); // clean the static lines buf.
+                // clean the static lines buf.
+                staticLines.setLength(0);
             }
             DynamicPart dynamicPart;
             switch (token.type) {
-                case Token.BEGIN_IGNORED: // <!-- @# -->
+                case Token.BEGIN_IGNORED:
+                    // <!-- BEGIN IGNORED: -->
                     ignoredName = token.name;
                     break;
-                case Token.BEGIN_FOR: // <!-- @for name -->
+                case Token.BEGIN_DYNAMIC:
+                    // <!-- BEGIN DYNAMIC: name -->
                     dynamicPart = new DynamicPart(token.name);
                     top.addStep(dynamicPart);
                     stack.push(top);
                     top = dynamicPart;
 
                     break;
-                case Token.BEGIN_IF: // <!-- @if condition-->
+                case Token.BEGIN_CONDITION:
+                    // <!-- BEGIN CONDITION： condition-->
                     dynamicPart = new ConditionDynamicPart(token.name);
                     top.addStep(dynamicPart);
                     stack.push(top);
                     top = dynamicPart;
                     break;
-                case Token.END_FOR: // <!-- @done name-->
+                case Token.END_DYNAMIC:
+                    // <!-- END DYNAMIC: name-->
                     if (!top.getName().equals(token.name)) {
-                        throw new IOException("line " + lineNo + ": @done " + top.getName()
+                        throw new IOException("line " + lineNo + ": END DYNAMIC: " + top.getName()
                                                       + " instead of " + token.name
                                                       + " is expected.");
                     }
                     top = stack.pop();
                     if (top == null) {
-                        throw new IOException("line " + lineNo + ": @done top = null, why?");
+                        throw new IOException("line " + lineNo + ": END DYNAMIC: top = null, why?");
                     }
                     processHasVariable(token, line, top);
                     break;
 
-                case Token.END_IF: // <!-- @end condition -->
+                case Token.END_CONDITION:
+                    // <!-- END CONDITION： condition -->
                     if (!top.getName().equals(token.name)) {
-                        throw new IOException("line " + lineNo + ": @done " + top.getName()
-                                                      + " instead of " + token.name
-                                                      + " is expected.");
+                        throw new IOException(
+                                "line " + lineNo + ":  END CONDITION： " + top.getName()
+                                        + " instead of " + token.name
+                                        + " is expected.");
                     }
                     top = stack.pop();
                     if (top == null) {
-                        throw new IOException("line " + lineNo + ": @end top = null, why?");
+                        throw new IOException(
+                                "line " + lineNo + ":  END CONDITION： top = null, why?");
                     }
                     processHasVariable(token, line, top);
                     break;
-                case Token.HAS_VARIABLE: // this line contains ${..}
+                case Token.HAS_VARIABLE:
+                    // this line contains ${..}
                     processHasVariable(token, line, top);
                 default:
                     break;
@@ -396,6 +423,12 @@ public class Parser {
         return template;
     }
 
+    /**
+     * parse a file to template
+     *
+     * @param fileName String
+     * @return ITemplate
+     */
     public static ITemplate parse(final String fileName) throws IOException {
         return parse(fileName, FileEncodingUtils.getDefaultEncoding());
     }
@@ -413,7 +446,8 @@ public class Parser {
     public static Token parseLine(final String line) {
         Token token = new Token();
 
-        if (line.startsWith(START_TAG) && line.endsWith(STOP_TAG)) {
+        //if (line.startsWith(START_TAG) && line.endsWith(STOP_TAG)) {
+        if (COMMENT_PATTERN.matcher(line).matches()) {
             int commentBeginPos = line.indexOf(START_TAG) + START_TAG.length();
             int commentEndPos = line.indexOf(STOP_TAG, commentBeginPos);
 
@@ -425,7 +459,7 @@ public class Parser {
                 Matcher matcher = pattern.matcher(tag);
                 if (matcher.matches()) {
                     token.type = TYPE_GROUP[i];
-                    if (token.type >= Token.BEGIN && token.type <= Token.END_IF) {
+                    if (token.type >= Token.BEGIN && token.type <= Token.END_CONDITION) {
                         token.name = matcher.group(1);
                     }
                     break;
@@ -437,7 +471,7 @@ public class Parser {
 
         Matcher matcher = BEGIN_FOR_PATTERN_SCRIPT.matcher(line);
         if (matcher.matches()) {
-            token.type = Token.BEGIN_FOR;
+            token.type = Token.BEGIN_DYNAMIC;
             token.name = matcher.group(1);
 
             return token;
@@ -445,23 +479,23 @@ public class Parser {
 
         matcher = END_FOR_PATTERN_SCRIPT.matcher(line);
         if (matcher.matches()) {
-            token.type = Token.END_FOR;
+            token.type = Token.END_DYNAMIC;
             token.name = matcher.group(1);
 
             return token;
         }
 
-        matcher = BEGIN_IF_PATTERN_SCRIPT.matcher(line);
+        matcher = BEGIN_CONDITION_PATTERN_SCRIPT.matcher(line);
         if (matcher.matches()) {
-            token.type = Token.BEGIN_IF;
+            token.type = Token.BEGIN_CONDITION;
             token.name = matcher.group(1);
 
             return token;
         }
 
-        matcher = END_IF_PATTERN_SCRIPT.matcher(line);
+        matcher = END_CONDITION_PATTERN_SCRIPT.matcher(line);
         if (matcher.matches()) {
-            token.type = Token.END_IF;
+            token.type = Token.END_CONDITION;
             token.name = matcher.group(1);
 
             return token;
@@ -529,7 +563,8 @@ public class Parser {
             varPart = new GlobalVariablePart(vpartName);
 
             top.addStep(varPart);
-        } else if (vpartName.startsWith("${include ")) { // with top
+        } else if (vpartName.startsWith("${include ")) {
+            // with top
             String[] result = getSubFilePath(vpartName);
             String filepath = result[0];
             String encoding = result[1];
@@ -538,7 +573,8 @@ public class Parser {
             List<ITemplate> steps = top.getSteps();
             steps.addAll(sub.getSteps());
             top.setSteps(steps);
-        } else if (vpartName.startsWith("${asChildInclude ")) { // in top
+        } else if (vpartName.startsWith("${asChildInclude ")) {
+            // in top
             String[] result = getChildFilePath(vpartName);
             String filepath = result[1];
             String subDynaName = result[0];
@@ -560,7 +596,7 @@ public class Parser {
 
         // separate this line to
         // .............${.........}.........${..........}....... etc
-        // ^ ^ ^ ^
+        // ^            ^           ^         ^
         // StaticPart VariablePart Static Variable Static etc
 
         if (posPairs == null) {

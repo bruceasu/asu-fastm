@@ -14,6 +14,7 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import net.fastm.Parser;
 import net.fastm.TemplateLoader;
+import net.util.FileEncodingUtils;
 import org.xml.sax.SAXException;
 
 /**
@@ -24,65 +25,16 @@ import org.xml.sax.SAXException;
 public class FastmConfig {
 
     /**
-     * 配置文件对象
-     */
-    public static class FileItem implements Comparable<Object> {
-
-        // 配置映射文件路径
-        private final String configFile;
-
-        // 加载的顺序
-        private final int order;
-
-        // 配置文件最后修改时间
-        private long lastModifyTime = 0L;
-
-        private static int globleOrder = 0;
-
-        public FileItem(String configFile) {
-            this.configFile = configFile;
-            order = globleOrder;
-            globleOrder++;
-            lastModifyTime = getFileLastModifyTime(configFile);
-        }
-
-        @Override
-        public int compareTo(Object arg0) {
-
-            if (arg0 instanceof FileItem) {
-                return getOrder() - ((FileItem) arg0).getOrder();
-            }
-            return 0;
-        }
-
-        public String getConfigFile() {
-            return configFile;
-        }
-
-        public long getLastModifyTime() {
-            return lastModifyTime;
-        }
-
-        public int getOrder() {
-            return order;
-        }
-
-        public void setLastModifyTime(long lastModifyTime) {
-            this.lastModifyTime = lastModifyTime;
-        }
-    }
-
-    /**
      * 模板文件路径
      */
-    public static String templateDir = "";
-
+    public static       String templateDir            = "";
     /**
      * 系统运行模式的配置信息关键key
      */
-    public static final String runStyleKey = "fastm.runStyle";
-
-    public static final String fastmFilePath = "fastm.filePath";
+    public static final String KEY_RUN_STYLE          = "fastm.run.style";
+    public static final String KEY_FASTM_FILE_PATH    = "fastm.file.path";
+    public static final String KEY_FASTM_TEMPLATE_DIR = "fastm.template.path";
+    public static final String KEY_FASTM_TEMPLATE_ENCODING = "fastm.template.encoding";
 
     /**
      * 系统运行模式,默认为deploy,还可选develop
@@ -104,11 +56,70 @@ public class FastmConfig {
      */
     private static volatile Map<String, TemplateLoader> templateMap = new HashMap<String, TemplateLoader>();
 
+    public static void init(Map<String, String> configMap) throws Exception {
+        String encoding = configMap.get(KEY_FASTM_TEMPLATE_ENCODING);
+        if (encoding != null) {
+            FileEncodingUtils.setDefaultEncoding(encoding);
+        }
+        String templatDir = configMap.get(KEY_FASTM_TEMPLATE_DIR);
+        // "deploy", "develop"
+        String runStyle = configMap.get(FastmConfig.KEY_RUN_STYLE);
+        FastmConfig.setRunStyle(runStyle);
+        FastmConfig.setTemplateDir(templatDir);
+
+        String filePath = configMap.get(FastmConfig.KEY_FASTM_FILE_PATH);
+        if (isBlank(filePath)) {
+            throw new IllegalArgumentException("fastmFilePath参数为空，无法初始化fastm。 请检查配置是否正确");
+        }
+        File file = new File(filePath);
+        if (file.exists()) {
+            FastmConfig.loadFastmConfigByFilePath(file.getAbsolutePath());
+            System.out.printf("成功从文件系统加载资源文件[%s]...%n",
+                              file.getAbsolutePath());
+        } else {
+            // try classpath
+            InputStream is = FastmConfig.class.getClassLoader().getResourceAsStream(filePath);
+            if (is == null) {
+                System.err.println("没有配置文件，将不会加载模板。");
+            } else {
+                // 资源文件不存在于文件系统
+                System.out.printf("资源文件[%s]不存在于文件系统,将通过ClassLoader进行加载,热修改功能关闭...%n",
+                                  filePath);
+                FastmConfig.loadFastmConfigByInputStream(is);
+                FastmConfig.setRunStyle("deploy");
+            }
+        }
+
+    }
+
     /**
-     * 将加载的配置文件添加到缓存
+     * 依据绝对路径加载fastm模板配置映射文件
+     *
+     * @param configFile 映射文件路径
+     * @throws SAXException 加载失败抛出异常
      */
-    public static void addbatchTemplateMapping(Map<String, TemplateLoader> templateMapping) {
-        templateMap.putAll(templateMapping);
+    public static void loadFastmConfigByFilePath(String configFile) throws Exception {
+        addFastmConfigFilePath(configFile);
+        TemplateMappingHandler handler = new TemplateMappingHandler();
+        SAXParser saxParser = SAXParserFactory.newInstance().newSAXParser();
+        saxParser.parse(configFile, handler);
+        Map<String, TemplateLoader> templateMapping = handler.getTemplateMap();
+
+        addBatchTemplateMapping(templateMapping);
+    }
+
+    /**
+     * 加载流形式的配置文件
+     *
+     * @param is 流
+     */
+    public static void loadFastmConfigByInputStream(InputStream is) throws Exception {
+        TemplateMappingHandler handler = new TemplateMappingHandler();
+        SAXParser saxParser = SAXParserFactory.newInstance().newSAXParser();
+        saxParser.parse(is, handler);
+        Map<String, TemplateLoader> templateMapping = handler.getTemplateMap();
+
+        addBatchTemplateMapping(templateMapping);
     }
 
     /**
@@ -119,6 +130,85 @@ public class FastmConfig {
             FileItem fileItem = new FileItem(filePath);
             fastmConfigFilePathMapping.put(filePath, fileItem);
         }
+    }
+
+    /**
+     * 取配置映射文件路径等信息
+     */
+    public static Map<String, FileItem> getFastmConfigFilePathMapping() {
+        return fastmConfigFilePathMapping;
+    }
+
+    /**
+     * 强行重新加载修改的配置文件
+     */
+    public static void forceReloadFastmConfig() throws Exception {
+        if (getFastmConfigFilePathMapping().isEmpty()) {
+            // 无法热加载。
+            return;
+        }
+
+        // Map fastmConfig = new HashMap();
+        // 取配置值集合
+        boolean checkReloadSign = false;
+        Collection<FileItem> filePathMappingValueSet = FastmConfig.getFastmConfigFilePathMapping()
+                                                                  .values();
+        for (Iterator<FileItem> iter = filePathMappingValueSet.iterator(); iter.hasNext(); ) {
+            FileItem element = iter.next();
+            File configMapping = new File(element.getConfigFile());
+            if (configMapping.lastModified() != element.getLastModifyTime()) {
+                checkReloadSign = true;
+                break;
+            }
+        }
+        // 配置文件无修改过,则不需要加载
+        if (checkReloadSign == false) {
+            return;
+        }
+        // 转移配置集合从Set到List
+        List<FileItem> filePathMappingArray = new ArrayList<FileItem>();
+        for (Iterator<FileItem> iter = filePathMappingValueSet.iterator(); iter.hasNext(); ) {
+            FileItem element = iter.next();
+            filePathMappingArray.add(element);
+        }
+        // 排序,按加载的顺序
+        Collections.sort(filePathMappingArray);
+        // 清空
+        FastmConfig.clearTemplateMap();
+        // 强行加载
+        for (Iterator<FileItem> iter = filePathMappingArray.iterator(); iter.hasNext(); ) {
+            FileItem item = iter.next();
+            item.setLastModifyTime(new File(item.getConfigFile()).lastModified());
+            loadFastmConfigByFilePath(item.getConfigFile());
+        }
+    }
+
+
+    /**
+     * 设置系统的运行模式
+     */
+    public static void setRunStyle(String runStyle) {
+        for (int index = 0; index < runStyleArray.length; index++) {
+            if (runStyleArray[index].equals(runStyle)) {
+                FastmConfig.runStyle = runStyle;
+                System.out.println("当前系统启动运行模式为：" + runStyle);
+                return;
+            }
+        }
+        FastmConfig.runStyle = runStyleArray[0];
+        System.out.println("当前系统启动运行模式为不支持的运行模式："
+                                   + runStyle
+                                   + ",系统将采用默认的部署模式运行："
+                                   + runStyleArray[0]);
+    }
+
+    /* -----------------------templates------------------------ */
+
+    /**
+     * 将加载的配置文件添加到缓存
+     */
+    public static void addBatchTemplateMapping(Map<String, TemplateLoader> templateMapping) {
+        templateMap.putAll(templateMapping);
     }
 
     /**
@@ -177,61 +267,6 @@ public class FastmConfig {
         templateMap.clear();
     }
 
-    /**
-     * 强行重新加载修改的配置文件
-     */
-    public static void forceReloadFastmConfig() throws Exception {
-        if (getFastmConfigFilePathMapping().isEmpty()) {
-            // 无法热加载。
-            return;
-        }
-
-        // Map fastmConfig = new HashMap();
-        // 取配置值集合
-        boolean checkReloadSign = false;
-        Collection<FileItem> filePathMappingValueSet = FastmConfig.getFastmConfigFilePathMapping()
-                                                                  .values();
-        for (Iterator<FileItem> iter = filePathMappingValueSet.iterator(); iter.hasNext(); ) {
-            FileItem element = iter.next();
-            File configMapping = new File(element.getConfigFile());
-            if (configMapping.lastModified() != element.getLastModifyTime()) {
-                checkReloadSign = true;
-                break;
-            }
-        }
-        // 配置文件无修改过,则不需要加载
-        if (checkReloadSign == false) {
-            return;
-        }
-        // 转移配置集合从Set到List
-        List<FileItem> filePathMappingArray = new ArrayList<FileItem>();
-        for (Iterator<FileItem> iter = filePathMappingValueSet.iterator(); iter.hasNext(); ) {
-            FileItem element = iter.next();
-            filePathMappingArray.add(element);
-        }
-        // 排序,按加载的顺序
-        Collections.sort(filePathMappingArray);
-        // 清空
-        FastmConfig.clearTemplateMap();
-        // 强行加载
-        for (Iterator<FileItem> iter = filePathMappingArray.iterator(); iter.hasNext(); ) {
-            FileItem item = iter.next();
-            item.setLastModifyTime(new File(item.getConfigFile()).lastModified());
-            loadFastmConfigByFilePath(item.getConfigFile());
-        }
-    }
-
-    /**
-     * 取配置映射文件路径等信息
-     */
-    public static Map<String, FileItem> getFastmConfigFilePathMapping() {
-        return fastmConfigFilePathMapping;
-    }
-
-    private static long getFileLastModifyTime(String fileName) {
-        File file = new File(fileName);
-        return file.lastModified();
-    }
 
     public static String getRunStyle() {
         return runStyle;
@@ -259,57 +294,95 @@ public class FastmConfig {
         return templateDir;
     }
 
-    /**
-     * 依据绝对路径加载fastm模板配置映射文件
-     *
-     * @param configFile 映射文件路径
-     * @throws SAXException 加载失败抛出异常
-     */
-    public static void loadFastmConfigByFilePath(String configFile) throws Exception {
-        addFastmConfigFilePath(configFile);
-        TemplateMappingHandler handler = new TemplateMappingHandler();
-        SAXParser saxParser = SAXParserFactory.newInstance().newSAXParser();
-        saxParser.parse(configFile, handler);
-        Map<String, TemplateLoader> templateMapping = handler.getTemplateMap();
-
-        addbatchTemplateMapping(templateMapping);
-    }
-
-    /**
-     * 加载流形式的配置文件
-     *
-     * @param is 流
-     */
-    public static void loadFastmConfigByInputStream(InputStream is) throws Exception {
-        TemplateMappingHandler handler = new TemplateMappingHandler();
-        SAXParser saxParser = SAXParserFactory.newInstance().newSAXParser();
-        saxParser.parse(is, handler);
-        Map<String, TemplateLoader> templateMapping = handler.getTemplateMap();
-
-        addbatchTemplateMapping(templateMapping);
-    }
-
-    /**
-     * 设置系统的运行模式
-     */
-    public static void setRunStyle(String runStyle) {
-        for (int index = 0; index < runStyleArray.length; index++) {
-            if (runStyleArray[index].equals(runStyle)) {
-                FastmConfig.runStyle = runStyle;
-                System.out.println("当前系统启动运行模式为：" + runStyle);
-                return;
-            }
-        }
-        System.out.println("当前系统启动运行模式为不支持的运行模式：" + runStyle + ",系统将采用默认的部署模式运行："
-                                   + runStyleArray[0]);
-    }
-
     public static void setTemplateDir(String templateDir) {
         FastmConfig.templateDir = templateDir;
         try {
+            // 重要，为了，传递相对文件路径，和include asChildInclude的扩展。
             Parser.setParserContext(templateDir);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
+    /**
+     * 如果此字符串为 null 或者全为空白字符，则返回 true
+     *
+     * @param cs 字符串
+     * @return 如果此字符串为 null 或者全为空白字符，则返回 true
+     */
+    private static boolean isBlank(CharSequence cs) {
+        if (null == cs) {
+            return true;
+        }
+        int length = cs.length();
+        for (int i = 0; i < length; i++) {
+            if (!(Character.isWhitespace(cs.charAt(i)))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+
+    /**
+     * 配置文件对象
+     */
+    public static class FileItem implements Comparable<Object> {
+
+        /**
+         * 配置映射文件路径
+         */
+        private final String configFile;
+
+        /**
+         * 加载的顺序
+         */
+        private final int order;
+
+        /**
+         * 配置文件最后修改时间
+         */
+        private long lastModifyTime = 0L;
+
+        private static int globleOrder = 0;
+
+        public FileItem(String configFile) {
+            this.configFile = configFile;
+            order = globleOrder;
+            globleOrder++;
+            lastModifyTime = getFileLastModifyTime(configFile);
+        }
+
+        @Override
+        public int compareTo(Object arg0) {
+
+            if (arg0 instanceof FileItem) {
+                return getOrder() - ((FileItem) arg0).getOrder();
+            }
+            return 0;
+        }
+
+        public String getConfigFile() {
+            return configFile;
+        }
+
+        public long getLastModifyTime() {
+            return lastModifyTime;
+        }
+
+        public int getOrder() {
+            return order;
+        }
+
+        public void setLastModifyTime(long lastModifyTime) {
+            this.lastModifyTime = lastModifyTime;
+        }
+
+
+        private long getFileLastModifyTime(String fileName) {
+            File file = new File(fileName);
+            return file.lastModified();
+        }
+    }
+
 }

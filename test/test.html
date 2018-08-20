@@ -1,28 +1,29 @@
 <html>
-<!-- @# noshow -->
+<!-- BEGIN IGNORED: noshow -->
 this is will not be display!
-<!-- @% noshow -->
+<!-- END IGNORED: noshow -->
 <body>
 <h1>abc</h1>
 <ul>
-    <!-- @for list -->
-    <!-- @for x -->
-    <li d='x'>${name}</li>
-    <!-- @done x -->
-    <!-- @for y -->
-    <li d='y'>${name}</li>
-    <!-- @done y -->
+    <!-- BEGIN DYNAMIC: list -->
+        <!-- BEGIN DYNAMIC: x -->
+        <li d='x'>${name}</li>
+        <!-- END DYNAMIC: x -->
 
-    <!-- @done list -->
+        <!-- BEGIN DYNAMIC: y -->
+        <li d='y'>${name}</li>
+        <!-- END DYNAMIC: y -->
+
+    <!-- END DYNAMIC: list -->
 </ul>
 
-<!-- @if ${A}==3 -->
+<!-- BEGIN CONDITION: ${A}==3 -->
 H2 --- H2
-<!-- @end ${A}==3 -->
+<!-- END CONDITION: ${A}==3 -->
 
-<!-- @if ${B}=="true"-->
+<!-- BEGIN CONDITION: ${B}=="true"-->
 H3 --- H3
-<!-- @end ${B}=="true"-->
+<!-- END CONDITION: ${B}=="true"-->
 
 ${include a.htm}
 
@@ -31,23 +32,23 @@ ${include a.htm}
 ${asChildInclude m a.htm}
 
 <script type="text/javascript">
-    // @for list
-    // @for x
+    // BEGIN DYNAMIC: list
+    // BEGIN DYNAMIC: x
     /*   ======${name}   */
-    // @done x
-    // @for y
+    // END DYNAMIC: x
+    // BEGIN DYNAMIC: y
     /* ${name}*/
-    // @done y
+    // END DYNAMIC: y
 
-    // @done list
+    // END DYNAMIC: list
 
-    // @if ${A} == 3
+    // BEGIN CONDITION: ${A} == 3
     alert(1);
-    // @end ${A} == 3
+    // END CONDITION: ${A} == 3
 
-   // @if ${B}=="true"
+   // BEGIN CONDITION: ${B}=="true"
    /* H3 --- H3 */
-   // @end ${B}=="true"
+   // END CONDITION: ${B}=="true"
 </script>
 
 </body>

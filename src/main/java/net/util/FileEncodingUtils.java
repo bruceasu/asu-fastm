@@ -1,36 +1,27 @@
 package net.util;
 
 
+import java.nio.charset.Charset;
+
 public class FileEncodingUtils {
-	private static String DEFAULT_ENCODING = null;
+	private static String DEFAULT_ENCODING = "UTF-8";
 
 	synchronized
 	public static String getDefaultEncoding() {
 		if (DEFAULT_ENCODING == null) {
-			String encoding = null;
-			String lang = System.getenv("LANG");
-			if (isNotEmpty(lang)) {
-				int idx = lang.indexOf('.');
-				if (idx != -1) {
-					encoding = lang.substring(idx + 1);
-				}
-			}
-
-			encoding = System.getenv("FILE.ENCODING");
-			if (isEmpty(encoding)) {
-				encoding = System.getProperty("file.encoding", "UTF-8");
-			}
-
-			DEFAULT_ENCODING = encoding;
+			// 要不要直接指定UTF-8呢
+			DEFAULT_ENCODING = System.getProperty("file.encoding", "UTF-8");
 		}
 		return DEFAULT_ENCODING;
 	}
 
-	private static boolean isEmpty(String str) {
-		return str == null || str.replaceAll("\\s+", "").length() == 0;
-	}
+	public static void setDefaultEncoding(String encoding) {
+		try {
+			Charset charset = Charset.forName(encoding);
+			DEFAULT_ENCODING = encoding;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
-	private static boolean isNotEmpty(String str) {
-		return !isEmpty(str);
 	}
 }

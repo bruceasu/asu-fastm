@@ -62,7 +62,7 @@ public class Main {
         FastmConfig.addTemplateFile(absolutePath);
 
         String html = FastEx.parse(absolutePath, valueSet);
-        System.err.println(html);
+        System.out.println(html);
 
 //        FastmConfig.setTemplateDir("test");
 //        String templateName = "a.htm";
@@ -82,5 +82,8 @@ public class Main {
 //        String html = FastEx.parse(templateName, m);
 //        System.out.println("html = " + html);
 
+        System.out.println("=====================================");
+        String s = FastEx.parseFile("test\\a.htm", valueSet);
+        System.out.println("s = " + s);
     }
 }
