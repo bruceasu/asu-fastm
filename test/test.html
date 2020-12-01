@@ -1,54 +1,68 @@
 <html>
-<!-- BEGIN IGNORED: noshow -->
+<!-- # noshow -->
 this is will not be display!
-<!-- END IGNORED: noshow -->
+<!-- ## noshow -->
 <body>
 <h1>abc</h1>
+<!-- when ${AA} -->
+<h1>A</h1>
+<!-- end ${AA} -->
+<!-- when !${BB} -->
+<h1>B</h1>
+<!-- end !${BB} -->
+<!-- when CC -->
+<h1>C</h1>
+<!-- end CC -->
+<!-- when !DD -->
+<h1>D</h1>
+<!-- end !DD -->
 <ul>
-    <!-- BEGIN DYNAMIC: list -->
-        <!-- BEGIN DYNAMIC: x -->
+    <!-- for list -->
+        <!-- for x -->
         <li d='x'>${name}</li>
-        <!-- END DYNAMIC: x -->
+        <!-- done x -->
 
-        <!-- BEGIN DYNAMIC: y -->
+        <!-- for y -->
         <li d='y'>${name}</li>
-        <!-- END DYNAMIC: y -->
+        <!-- done y -->
 
-    <!-- END DYNAMIC: list -->
+    <!-- done list -->
 </ul>
 
-<!-- BEGIN CONDITION: ${A}==3 -->
+<!-- when ${A}==3 -->
 H2 --- H2
-<!-- END CONDITION: ${A}==3 -->
+<!-- end ${A}==3 -->
 
-<!-- BEGIN CONDITION: ${B}=="true"-->
+<!-- when ${B}=="true"-->
 H3 --- H3
-<!-- END CONDITION: ${B}=="true"-->
+<!-- end ${B}=="true"-->
 
+>>>>>>>>>>>>>>>>>>>>>
 ${include a.htm}
 
 ----------------------------
 
 ${asChildInclude m a.htm}
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 <script type="text/javascript">
-    // BEGIN DYNAMIC: list
-    // BEGIN DYNAMIC: x
+    // for list
+    // for x
     /*   ======${name}   */
-    // END DYNAMIC: x
-    // BEGIN DYNAMIC: y
+    // done x
+    // for y
     /* ${name}*/
-    // END DYNAMIC: y
+    // done y
 
-    // END DYNAMIC: list
+    // done list
 
-    // BEGIN CONDITION: ${A} == 3
+    // when ${A} == 3
     alert(1);
-    // END CONDITION: ${A} == 3
+    // end ${A} == 3
 
-   // BEGIN CONDITION: ${B}=="true"
+   // when ${B}=="true"
    /* H3 --- H3 */
-   // END CONDITION: ${B}=="true"
+   // end ${B}=="true"
 </script>
 
 </body>

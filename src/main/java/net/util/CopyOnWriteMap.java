@@ -7,22 +7,28 @@ import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 
 
+/**
+ * @author suk
+ */
 public class CopyOnWriteMap<K, V> implements Map<K, V>
 {
 	transient final ReentrantLock	lock		= new ReentrantLock();
 
 	protected volatile Map<K, V>	mapToRead	= getNewMap();
 
+	@Override
 	public synchronized void clear()
 	{
 		this.mapToRead = getNewMap();
 	}
 
+	@Override
 	public boolean containsKey(final Object key)
 	{
 		return this.mapToRead.containsKey(key);
 	}
 
+	@Override
 	public boolean containsValue(final Object value)
 	{
 		return this.mapToRead.containsValue(value);
@@ -35,11 +41,13 @@ public class CopyOnWriteMap<K, V> implements Map<K, V>
 		return newMap;
 	}
 
+	@Override
 	public Set<Map.Entry<K, V>> entrySet()
 	{
 		return this.mapToRead.entrySet();
 	}
 
+	@Override
 	public V get(final Object key)
 	{
 		return this.mapToRead.get(key);
@@ -50,16 +58,19 @@ public class CopyOnWriteMap<K, V> implements Map<K, V>
 		return new HashMap<K, V>();
 	}
 
+	@Override
 	public boolean isEmpty()
 	{
 		return this.mapToRead.isEmpty();
 	}
 
+	@Override
 	public Set<K> keySet()
 	{
 		return this.mapToRead.keySet();
 	}
 
+	@Override
 	public synchronized V put(final K key, final V value)
 	{
 		final ReentrantLock lock = this.lock;
@@ -74,6 +85,7 @@ public class CopyOnWriteMap<K, V> implements Map<K, V>
 		}
 	}
 
+	@Override
 	public synchronized void putAll(final Map<? extends K, ? extends V> t)
 	{
 		Map<K, V> map = copy();
@@ -81,6 +93,7 @@ public class CopyOnWriteMap<K, V> implements Map<K, V>
 		this.mapToRead = map;
 	}
 
+	@Override
 	public synchronized V remove(final Object key)
 	{
 		Map<K, V> map = copy();
@@ -89,11 +102,13 @@ public class CopyOnWriteMap<K, V> implements Map<K, V>
 		return o;
 	}
 
+	@Override
 	public int size()
 	{
 		return this.mapToRead.size();
 	}
 
+	@Override
 	public Collection<V> values()
 	{
 		return this.mapToRead.values();

@@ -4,9 +4,11 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.StringTokenizer;
 
-import net.util.express.ComputeITF;
-
-public class RepolandComputeITFImp implements ComputeITF {
+/**
+ * @author suk
+ */
+public class RepolandCompute
+{
 	private ArrayList<String> expression = new ArrayList<String>();
 
 	private ArrayList<String> right = new ArrayList<String>();

@@ -114,35 +114,52 @@ public class Parser {
     static final String END       = "}";
 
     static final Pattern COMMENT_PATTERN   = Pattern.compile("\\s*<!--.*-->\\s*");
-    static final Pattern BEGIN_FOR_PATTERN = Pattern
-            .compile("\\s*BEGIN\\s*DYNAMIC\\s*:\\s*([^\\s]+)\\s*");
-    static final Pattern END_FOR_PATTERN   = Pattern
-            .compile("\\s*END\\s*DYNAMIC\\s*:\\s*([^\\s]+)\\s*");
+    //static final Pattern BEGIN_FOR_PATTERN = Pattern
+    //        .compile("\\s*BEGIN\\s*DYNAMIC\\s*:\\s*([^\\s]+)\\s*");
+    //static final Pattern END_FOR_PATTERN   = Pattern
+    //        .compile("\\s*END\\s*DYNAMIC\\s*:\\s*([^\\s]+)\\s*");
 
-    static final Pattern BEGIN_IGN_PATTERN = Pattern
-            .compile("\\s*BEGIN\\s*IGNORED\\s*:\\s*([^\\s]*)\\s*");
-    static final Pattern END_IGN_PATTERN   = Pattern
-            .compile("\\s*END\\s*IGNORED\\s*:\\s*([^\\s]*)\\s*");
+    //static final Pattern BEGIN_IGN_PATTERN = Pattern
+    //        .compile("\\s*BEGIN\\s*IGNORED\\s*:\\s*([^\\s]*)\\s*");
+    //static final Pattern END_IGN_PATTERN   = Pattern
+    //        .compile("\\s*END\\s*IGNORED\\s*:\\s*([^\\s]*)\\s*");
+    //static final Pattern BEGIN_CONDITION_PATTERN = Pattern
+    //        .compile("\\s*BEGIN\\s*CONDITION\\s*:\\s*([^\\s]*)\\s*");
+    //static final Pattern END_CONDITION_PATTERN   = Pattern
+    //        .compile("\\s*END\\s*CONDITION\\s*:\\s*([^\\s]*)\\s*");
+    //
+    //static final Pattern BEGIN_FOR_PATTERN_SCRIPT = Pattern
+    //        .compile("\\s*//\\s*BEGIN\\s*DYNAMIC\\s*:\\s*([^\\s]*)\\s*");
+    //static final Pattern END_FOR_PATTERN_SCRIPT   = Pattern
+    //        .compile("\\s*//\\s*END\\s*DYNAMIC\\s*:\\s*([^\\s]*)\\s*");
+    //
+    //static final Pattern BEGIN_IGN_PATTERN_SCRIPT = Pattern
+    //        .compile("\\s*//\\s*BEGIN\\s*IGNORED\\s*:\\s*([^\\s]*)\\s*");
+    //static final Pattern END_IGN_PATTERN_SCRIPT   = Pattern
+    //        .compile("\\s*//\\s*END\\s*IGNORED\\s*:\\s*([^\\s]*)\\s*");
+    //
+    //static final Pattern BEGIN_CONDITION_PATTERN_SCRIPT = Pattern
+    //        .compile("\\s*//\\s*BEGIN\\s*CONDITION\\s*:\\s*(.+)\\s*");
+    //static final Pattern END_CONDITION_PATTERN_SCRIPT   = Pattern
+    //        .compile("\\s*//\\s*END\\s*CONDITION\\s*:\\s*(.+)\\s*");
 
-    static final Pattern BEGIN_CONDITION_PATTERN = Pattern
-            .compile("\\s*BEGIN\\s*CONDITION\\s*:\\s*([^\\s]*)\\s*");
-    static final Pattern END_CONDITION_PATTERN   = Pattern
-            .compile("\\s*END\\s*CONDITION\\s*:\\s*([^\\s]*)\\s*");
+    static final Pattern BEGIN_FOR_PATTERN = Pattern.compile("\\s*for\\s+([^\\s]+)\\s*");
+    static final Pattern END_FOR_PATTERN   = Pattern.compile("\\s*done\\s+([^\\s]+)\\s*");
 
-    static final Pattern BEGIN_FOR_PATTERN_SCRIPT = Pattern
-            .compile("\\s*//\\s*BEGIN\\s*DYNAMIC\\s*:\\s*([^\\s]*)\\s*");
-    static final Pattern END_FOR_PATTERN_SCRIPT   = Pattern
-            .compile("\\s*//\\s*END\\s*DYNAMIC\\s*:\\s*([^\\s]*)\\s*");
+    static final Pattern BEGIN_IGN_PATTERN = Pattern.compile("\\s*#\\s+([^\\s]*)\\s*");
+    static final Pattern END_IGN_PATTERN   = Pattern.compile("\\s*##\\s+([^\\s]*)\\s*");
 
-    static final Pattern BEGIN_IGN_PATTERN_SCRIPT = Pattern
-            .compile("\\s*//\\s*BEGIN\\s*IGNORED\\s*:\\s*([^\\s]*)\\s*");
-    static final Pattern END_IGN_PATTERN_SCRIPT   = Pattern
-            .compile("\\s*//\\*END\\s*IGNORED\\s*:\\s*([^\\s]*)\\s*");
+    static final Pattern BEGIN_CONDITION_PATTERN = Pattern.compile("\\s*when\\s+(.+)\\s*");
+    static final Pattern END_CONDITION_PATTERN   = Pattern.compile("\\s*end\\s+(.+)\\s*");
 
-    static final Pattern BEGIN_CONDITION_PATTERN_SCRIPT = Pattern
-            .compile("\\s*//\\s*BEGIN\\s*CONDITION\\s*:\\s*(.+)\\s*");
-    static final Pattern END_CONDITION_PATTERN_SCRIPT   = Pattern
-            .compile("\\s*//\\s*END\\s*CONDITION\\s*:\\s*(.+)\\s*");
+    static final Pattern BEGIN_FOR_PATTERN_SCRIPT = Pattern.compile("\\s*//\\s*for\\s+([^\\s]*)\\s*");
+    static final Pattern END_FOR_PATTERN_SCRIPT   = Pattern.compile("\\s*//\\s*done\\s+([^\\s]*)\\s*");
+
+    static final Pattern BEGIN_IGN_PATTERN_SCRIPT = Pattern.compile("\\s*//\\s*#\\s+([^\\s]*)\\s*");
+    static final Pattern END_IGN_PATTERN_SCRIPT   = Pattern.compile("\\s*//\\s*##\\s+([^\\s]*)\\s*");
+
+    static final Pattern BEGIN_CONDITION_PATTERN_SCRIPT = Pattern.compile("\\s*//\\s*when\\s+(.+)\\s*");
+    static final Pattern END_CONDITION_PATTERN_SCRIPT   = Pattern.compile("\\s*//\\s*end\\s+(.+)\\s*");
 
 
     private static final Pattern[] PATTERN_GROUP = {BEGIN_FOR_PATTERN, END_FOR_PATTERN,
@@ -154,74 +171,11 @@ public class Parser {
     private static String PARSER_CONTEXT;
 
     /**
-     * @return // 0:name 1:file, 2:encoding
-     */
-    private static String[] getChildFilePath(final String vpartName) throws Exception {
-        if (!isParserValid()) {
-            throw new IOException("无效的解析器设置 PARSER_CONTEXT没设置");
-        }
-        String[] result = new String[3];
-        String[] strarr = vpartName.split("(\\s)+");
-        if (strarr.length == 2) {
-            result[0] = strarr[1].substring(0, strarr[1].length() - 1);
-            result[1] = PARSER_CONTEXT + File.separator
-                    + strarr[1].substring(0, strarr[1].length() - 1);
-            result[2] = FileEncodingUtils.getDefaultEncoding();
-        } else if (strarr.length == 3) {
-            result[0] = strarr[1];
-            result[1] = PARSER_CONTEXT + File.separator
-                    + strarr[2].substring(0, strarr[2].length() - 1);
-            result[2] = FileEncodingUtils.getDefaultEncoding();
-        } else if (strarr.length == 4) {
-            result[0] = strarr[1];
-            result[1] = PARSER_CONTEXT + File.separator
-                    + strarr[2];
-            result[2] = strarr[3].substring(0, strarr[3].length() - 1);
-        } else {
-            throw new Exception("错误的 子模板包含格式，个元素之间用 空格 隔开");
-        }
-
-        return result;
-    }
-
-    public static String getParserContext() {
-        return PARSER_CONTEXT;
-    }
-
-    /**
-     * @return // 0:file, 1:encoding
-     */
-    private static String[] getSubFilePath(final String vPartName) throws Exception {
-        if (!isParserValid()) {
-            throw new IOException("无效的解析器设置 PARSER_CONTEXT没设置");
-        }
-        String[] result = new String[2];
-        String[] strArr = vPartName.split("(\\s)+");
-        if (strArr.length == 2) {
-            result[0] = PARSER_CONTEXT + File.separator
-                    + strArr[1].substring(0, strArr[1].length() - 1);
-            result[1] = FileEncodingUtils.getDefaultEncoding();
-        } else if (strArr.length == 3) {
-            result[0] = PARSER_CONTEXT + File.separator + strArr[1];
-            result[1] = strArr[2].substring(0, strArr[2].length() - 1);
-        } else {
-            throw new Exception("错误的 子模板包含格式，个元素之间用 空格 隔开");
-        }
-
-        return result;
-    }
-
-    private static boolean isParserValid() {
-        return PARSER_CONTEXT != null;
-    }
-
-    /**
      * parse a BufferedReader to template
      *
      * @param reader BufferedReader
      * @return ITemplate
      */
-
     public static ITemplate parse(final BufferedReader reader) throws IOException {
         StringBuffer staticLines = new StringBuffer();
         Stack<DynamicPart> stack = new Stack<DynamicPart>();
@@ -336,7 +290,6 @@ public class Parser {
                 // clean the static lines buf.
                 staticLines.setLength(0);
             }
-            DynamicPart dynamicPart;
             switch (token.type) {
                 case Token.BEGIN_IGNORED:
                     // <!-- BEGIN IGNORED: -->
@@ -344,7 +297,7 @@ public class Parser {
                     break;
                 case Token.BEGIN_DYNAMIC:
                     // <!-- BEGIN DYNAMIC: name -->
-                    dynamicPart = new DynamicPart(token.name);
+                    DynamicPart dynamicPart = new DynamicPart(token.name);
                     top.addStep(dynamicPart);
                     stack.push(top);
                     top = dynamicPart;
@@ -352,10 +305,10 @@ public class Parser {
                     break;
                 case Token.BEGIN_CONDITION:
                     // <!-- BEGIN CONDITION： condition-->
-                    dynamicPart = new ConditionDynamicPart(token.name);
-                    top.addStep(dynamicPart);
+                    ConditionDynamicPart part = new ConditionDynamicPart(token.name);
+                    top.addStep(part);
                     stack.push(top);
-                    top = dynamicPart;
+                    top = part;
                     break;
                 case Token.END_DYNAMIC:
                     // <!-- END DYNAMIC: name-->
@@ -414,13 +367,11 @@ public class Parser {
             charsetName = FileEncodingUtils.getDefaultEncoding();
         }
 
-        InputStreamReader streamReader = new InputStreamReader(stream, charsetName);
-        BufferedReader reader = new BufferedReader(streamReader);
+        try(InputStreamReader streamReader = new InputStreamReader(stream, charsetName);
+        BufferedReader reader = new BufferedReader(streamReader);) {
 
-        ITemplate template = parse(reader);
-        streamReader.close();
-        reader.close();
-        return template;
+            return parse(reader);
+        }
     }
 
     /**
@@ -450,7 +401,6 @@ public class Parser {
         if (COMMENT_PATTERN.matcher(line).matches()) {
             int commentBeginPos = line.indexOf(START_TAG) + START_TAG.length();
             int commentEndPos = line.indexOf(STOP_TAG, commentBeginPos);
-
             String tag = line.substring(commentBeginPos, commentEndPos).trim();
 
             int nPatterns = PATTERN_GROUP.length;
@@ -459,9 +409,7 @@ public class Parser {
                 Matcher matcher = pattern.matcher(tag);
                 if (matcher.matches()) {
                     token.type = TYPE_GROUP[i];
-                    if (token.type >= Token.BEGIN && token.type <= Token.END_CONDITION) {
-                        token.name = matcher.group(1);
-                    }
+                    token.name = matcher.group(1);
                     break;
                 }
             }
@@ -469,54 +417,17 @@ public class Parser {
             return token;
         }
 
-        Matcher matcher = BEGIN_FOR_PATTERN_SCRIPT.matcher(line);
-        if (matcher.matches()) {
-            token.type = Token.BEGIN_DYNAMIC;
-            token.name = matcher.group(1);
-
+        if (matchScriptToken(line, token)) {
             return token;
         }
 
-        matcher = END_FOR_PATTERN_SCRIPT.matcher(line);
-        if (matcher.matches()) {
-            token.type = Token.END_DYNAMIC;
-            token.name = matcher.group(1);
+        matchVariable(line, token);
 
-            return token;
-        }
+        return token;
+    }
 
-        matcher = BEGIN_CONDITION_PATTERN_SCRIPT.matcher(line);
-        if (matcher.matches()) {
-            token.type = Token.BEGIN_CONDITION;
-            token.name = matcher.group(1);
-
-            return token;
-        }
-
-        matcher = END_CONDITION_PATTERN_SCRIPT.matcher(line);
-        if (matcher.matches()) {
-            token.type = Token.END_CONDITION;
-            token.name = matcher.group(1);
-
-            return token;
-        }
-
-        matcher = BEGIN_IGN_PATTERN_SCRIPT.matcher(line);
-        if (matcher.matches()) {
-            token.type = Token.BEGIN_IGNORED;
-            token.name = matcher.group(1);
-
-            return token;
-        }
-
-        matcher = END_IGN_PATTERN_SCRIPT.matcher(line);
-        if (matcher.matches()) {
-            token.type = Token.END_IGNORED;
-            token.name = matcher.group(1);
-
-            return token;
-        }
-
+    private static void matchVariable(String line, Token token)
+    {
         int begin = 0;
         List<PosPair> posPairs = null;
         while (true) {
@@ -551,42 +462,58 @@ public class Parser {
             token.type = Token.HAS_VARIABLE;
             token.posPairs = posPairs;
         }
-
-        return token;
     }
 
-    private static void parseVariablePart(final DynamicPart top, final String vpartName)
-            throws Exception {
-        VariablePart varPart = null;
+    private static boolean matchScriptToken(String line, Token token)
+    {
+        Matcher matcher = BEGIN_FOR_PATTERN_SCRIPT.matcher(line);
+        if (matcher.matches()) {
+            token.type = Token.BEGIN_DYNAMIC;
+            token.name = matcher.group(1);
 
-        if (vpartName.startsWith("${global_")) {
-            varPart = new GlobalVariablePart(vpartName);
-
-            top.addStep(varPart);
-        } else if (vpartName.startsWith("${include ")) {
-            // with top
-            String[] result = getSubFilePath(vpartName);
-            String filepath = result[0];
-            String encoding = result[1];
-            DynamicPart sub = (DynamicPart) parse(filepath, encoding);
-
-            List<ITemplate> steps = top.getSteps();
-            steps.addAll(sub.getSteps());
-            top.setSteps(steps);
-        } else if (vpartName.startsWith("${asChildInclude ")) {
-            // in top
-            String[] result = getChildFilePath(vpartName);
-            String filepath = result[1];
-            String subDynaName = result[0];
-            String encoding = result[2];
-            DynamicPart sub = (DynamicPart) parse(filepath, encoding);
-
-            sub.setName(subDynaName);
-            top.addStep(sub);
-        } else {
-            varPart = new VariablePart(vpartName);
-            top.addStep(varPart);
+            return true;
         }
+
+        matcher = END_FOR_PATTERN_SCRIPT.matcher(line);
+        if (matcher.matches()) {
+            token.type = Token.END_DYNAMIC;
+            token.name = matcher.group(1);
+
+            return true;
+        }
+
+        matcher = BEGIN_CONDITION_PATTERN_SCRIPT.matcher(line);
+        if (matcher.matches()) {
+            token.type = Token.BEGIN_CONDITION;
+            token.name = matcher.group(1);
+
+            return true;
+        }
+
+        matcher = END_CONDITION_PATTERN_SCRIPT.matcher(line);
+        if (matcher.matches()) {
+            token.type = Token.END_CONDITION;
+            token.name = matcher.group(1);
+
+            return true;
+        }
+
+        matcher = BEGIN_IGN_PATTERN_SCRIPT.matcher(line);
+        if (matcher.matches()) {
+            token.type = Token.BEGIN_IGNORED;
+            token.name = matcher.group(1);
+
+            return true;
+        }
+
+        matcher = END_IGN_PATTERN_SCRIPT.matcher(line);
+        if (matcher.matches()) {
+            token.type = Token.END_IGNORED;
+            token.name = matcher.group(1);
+
+            return true;
+        }
+        return false;
     }
 
     private static void processHasVariable(final Token token,
@@ -602,14 +529,11 @@ public class Parser {
         if (posPairs == null) {
             return;
         }
-        int nPairs = posPairs.size();
 
         int begin = 0;
         int end = line.length() - 1;
         StaticPart staticPart;
-        for (int k = 0; k < nPairs; k++) {
-            PosPair posPair = posPairs.get(k);
-
+        for (PosPair posPair : posPairs) {
             if (begin < posPair.begin) {
                 staticPart = new StaticPart(line.substring(begin, posPair.begin));
                 top.addStep(staticPart);
@@ -624,7 +548,7 @@ public class Parser {
             }
 
             begin = posPair.end + 1;
-        } // end for (int k = 0; k < nPairs; k++)
+        }
 
         String tail = "\n";
 
@@ -635,6 +559,94 @@ public class Parser {
         top.addStep(staticPart);
 
     }
+
+    private static void parseVariablePart(final DynamicPart top, final String vpartName)
+    throws Exception {
+        VariablePart varPart = null;
+
+        if (vpartName.startsWith("${global_")) {
+            varPart = new GlobalVariablePart(vpartName);
+            top.addStep(varPart);
+        } else if (vpartName.startsWith("${include ")) {
+            // with top
+            String[] result = getSubFilePath(vpartName);
+            String filepath = result[0];
+            String encoding = result[1];
+            DynamicPart sub = (DynamicPart) parse(filepath, encoding);
+            sub.getSteps().forEach(top::addStep);
+        } else if (vpartName.startsWith("${asChildInclude ")) {
+            // in top
+            String[] result = getChildFilePath(vpartName);
+            String filepath = result[1];
+            String subDynaName = result[0];
+            String encoding = result[2];
+            DynamicPart sub = (DynamicPart) parse(filepath, encoding);
+            sub.setName(subDynaName);
+            top.addStep(sub);
+        } else {
+            varPart = new VariablePart(vpartName);
+            top.addStep(varPart);
+        }
+    }
+
+    /**
+     * @return // 0:name 1:file, 2:encoding
+     */
+    private static String[] getChildFilePath(final String vpartName) throws Exception {
+        if (!isParserValid()) {
+            throw new IOException("无效的解析器设置 PARSER_CONTEXT没设置");
+        }
+        String[] result = new String[3];
+        String[] strarr = vpartName.split("(\\s)+");
+        if (strarr.length == 2) {
+            result[0] = strarr[1].substring(0, strarr[1].length() - 1);
+            result[1] = PARSER_CONTEXT + File.separator
+                    + strarr[1].substring(0, strarr[1].length() - 1);
+            result[2] = FileEncodingUtils.getDefaultEncoding();
+        } else if (strarr.length == 3) {
+            result[0] = strarr[1];
+            result[1] = PARSER_CONTEXT + File.separator
+                    + strarr[2].substring(0, strarr[2].length() - 1);
+            result[2] = FileEncodingUtils.getDefaultEncoding();
+        } else if (strarr.length == 4) {
+            result[0] = strarr[1];
+            result[1] = PARSER_CONTEXT + File.separator
+                    + strarr[2];
+            result[2] = strarr[3].substring(0, strarr[3].length() - 1);
+        } else {
+            throw new Exception("错误的 子模板包含格式，个元素之间用 空格 隔开");
+        }
+
+        return result;
+    }
+
+    /**
+     * @return // 0:file, 1:encoding
+     */
+    private static String[] getSubFilePath(final String vPartName) throws Exception {
+        if (!isParserValid()) {
+            throw new IOException("无效的解析器设置 PARSER_CONTEXT没设置");
+        }
+        String[] result = new String[2];
+        String[] strArr = vPartName.split("(\\s)+");
+        if (strArr.length == 2) {
+            result[0] = PARSER_CONTEXT + File.separator
+                    + strArr[1].substring(0, strArr[1].length() - 1);
+            result[1] = FileEncodingUtils.getDefaultEncoding();
+        } else if (strArr.length == 3) {
+            result[0] = PARSER_CONTEXT + File.separator + strArr[1];
+            result[1] = strArr[2].substring(0, strArr[2].length() - 1);
+        } else {
+            throw new Exception("错误的 子模板包含格式，个元素之间用 空格 隔开");
+        }
+
+        return result;
+    }
+
+    private static boolean isParserValid() {
+        return PARSER_CONTEXT != null;
+    }
+
 
     /**
      * set the PARSER_CONTEXT

@@ -4,7 +4,7 @@
 
 修改了标识方式，添加了condition, include, asChildInclude 等有限的基本的操作。
 目的还是要保持简单，尽可能不要在模板做逻辑。
-如果确实喜欢在模板里做逻辑，建议用Freemark、Velocity，之类的模板实现。
+如果确实喜欢在模板里做逻辑，建议用 Freemark、 Velocity，之类的模板实现。
 
 从使用上来讲DYNAMIC几乎满足了所有情形： 
 1. null: 不显示
@@ -19,7 +19,7 @@
 <!-- END DYNAMIC: a -->
 
 <!-- BEGIN DYNAMIC: b -->
-	当 a == null 时显示。
+	当 a == null 时, 但因b有值，所以显示。
 <!-- END DYNAMIC: b -->
 ```
 
@@ -59,31 +59,31 @@
 # 修改后：
 1.  动态
 	```html
-	<!-- BEGIN DYNAMIC: zipcodes -->
+	<!-- for zipcodes -->
     <p>${zipcode}</p>
-    <!-- END DYNAMIC: zipcodes -->
+    <!-- done zipcodes -->
 	
-    <!-- BEGIN CONDITION: zipcode==123456 -->
+    <!-- when zipcode==123456 -->
         <p>${zipcode}</p>
-    <!-- END CONDITION: zipcode -->
+    <!-- end zipcode==123456 -->
     
-	<!-- BEGIN IGNORED: comment -->
+	<!-- # comment -->
     this is comment text.
-    <!-- END IGNORED: comment -->     
+    <!-- ## comment -->     
     ```
     	
 	```javascript
-	// BEGIN DYNAMIC: zipcodes
+	// for zipcodes
 	console.log('${zipcode}');
-	// END DYNAMIC: zipcodes
+	// done zipcodes
 
-	// BEGIN CONDITION: zipcode != ""
+	// when zipcode!=""
 	console.log('${zipcod}');
-	// END CONDITION: zipcode
+	// end zipcode!=""
 
-	// BEGIN IGNORED: comment
+	// # comment
     var x = "this is comment text. ";
-    // END IGNORED: comment     
+    // ## comment     
     
 	``` 
  

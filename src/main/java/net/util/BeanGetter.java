@@ -4,13 +4,17 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Map;
 
+/**
+ * @author suk
+ */
 public class BeanGetter {
 	final Map<String, PropertyGetter> propertyMap = new CopyOnWriteMap<String, PropertyGetter>();
 	Class<?> beanClass = null;
 
 	public Object get(Object bean, String propertyName) {
-		if (bean == null || propertyName == null)
+		if (bean == null || propertyName == null) {
 			return null;
+		}
 		PropertyGetter propGetter = propertyMap.get(propertyName);
 
 		if (propGetter == null) {
@@ -49,8 +53,11 @@ public class BeanGetter {
 			if (!hit) {
 				try {
 					field = beanClass.getField(propertyName);
-					propertyValue = field.get(bean);
-					hit = true;
+					if (field != null) {
+						field.setAccessible(true);
+						propertyValue = field.get(bean);
+						hit = true;
+					}
 				} catch (Exception e) {
 					field = null;
 				}

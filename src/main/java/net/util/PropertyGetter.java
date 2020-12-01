@@ -13,8 +13,9 @@ public class PropertyGetter {
 				Object[] values = null;
 				return method.invoke(bean, values);
 			}
-			if (field != null)
+			if (field != null) {
 				return field.get(bean);
+			}
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}

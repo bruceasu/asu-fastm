@@ -1,26 +1,26 @@
-<!-- BEGIN CONDITION: ${name}!="" --> ${name} <!-- END CONDITION: ${name}!="" -->
-<!-- BEGIN CONDITION: ${name}=="" --> ${name2} <!-- END CONDITION: ${name}=="" -->
+<!-- when ${name}!="" --> ${name} <!-- end ${name}!="" -->
+<!-- when ${name}=="" --> ${name2} <!-- end ${name}=="" -->
 
 
-// BEGIN CONDITION: ${name}!=""
+// when ${name}!=""
 ${name}
-// END CONDITION: ${name}!=""
+// end ${name}!=""
 
-// BEGIN CONDITION: ${name}==""
+// when ${name}==""
 ${name2}
-// END CONDITION: ${name}==""
+// end ${name}==""
 
 list1: <ul>
-<!-- BEGIN DYNAMIC: list -->
+<!-- for list -->
     <li>${x}</li>
-<!-- END DYNAMIC: list -->
+<!-- done  list -->
         </ul>
 list2
 <ul>
-    <!-- BEGIN DYNAMIC: list2 -->
+    <!-- for list2 -->
     <li>${x}</li>
-    <!-- END DYNAMIC: list2 -->
+    <!-- done  list2 -->
 </ul>
-<!-- BEGIN IGNORED: comment -->
+<!-- # comment -->
 this is comment
-<!-- END IGNORED: comment -->
+<!-- ## comment -->

@@ -17,15 +17,16 @@ public class VariablePart implements ITemplate {
     }
 
     public void setName(final String string) {
-        propName = string.substring(2, string.length() - 1).trim();
-        name = "${" + propName + "}";
+        propName = string.substring(START.length(), string.length() - END.length()).trim();
+        name = string;
     }
 
     public void setPropName(final String string) {
         propName = string.trim();
-        name = "${" + propName + "}";
+        name = START + propName + END;
     }
 
+    @Override
     public String structure(final int level) {
         StringBuffer buf = new StringBuffer();
 
@@ -42,26 +43,26 @@ public class VariablePart implements ITemplate {
         return name;
     }
 
-    public String toString(final Object obj) {
-        return toString(obj, DefaultInterceptor.getInstance());
-    }
-
+    @Override
     public Object getGlobalObj() {
         return globalObj;
     }
 
+    @Override
     public void setGlobalObj(final Object obj) {
         globalObj = obj;
     }
 
-
-    public String toString(Object obj, IValueInterceptor valueInterceptor) {
-        if (valueInterceptor == null) {
-            valueInterceptor = DefaultInterceptor.getInstance();
+    @Override
+    public void write(Object obj,
+                      PrintWriter writer,
+                      IValueInterceptor interceptor) {
+        if (interceptor == null) {
+            interceptor = DefaultInterceptor.getInstance();
         }
 
         if (obj == null) {
-            return name;
+            writer.write(name);
         }
         if (obj instanceof Object[]) {
             Object[] a = (Object[]) obj;
@@ -70,24 +71,13 @@ public class VariablePart implements ITemplate {
             }
         }
 
-        Object value = valueInterceptor.getProperty(obj, propName);
+        Object value = interceptor.getProperty(obj, propName);
 
         if (value == null)
-        // return name;
         {
-            return "";
+            writer.write("");
         } else {
-            return value.toString();
+            writer.write(value.toString());
         }
-    }
-
-    public void write(final Object obj, final PrintWriter writer) {
-        write(obj, writer, DefaultInterceptor.instance);
-    }
-
-    public void write(final Object obj,
-                      final PrintWriter writer,
-                      final IValueInterceptor valueInterceptor) {
-        writer.write(toString(obj, valueInterceptor));
     }
 }

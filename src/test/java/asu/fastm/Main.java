@@ -1,4 +1,4 @@
-package asu.common.fastm;
+package asu.fastm;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -18,7 +18,10 @@ public class Main {
         Map valueSet = new HashMap();
         List list = new ArrayList();
         valueSet.put("list", list);
-
+        valueSet.put("AA", true);
+        valueSet.put("BB", false);
+        valueSet.put("CC", true);
+        valueSet.put("DD", false);
         Map v1 = new HashMap();
         v1.put("name", "a");
         v1.put("x", v1);
@@ -54,6 +57,8 @@ public class Main {
         valueSet.putAll(m);
         m.put("name2", "123456");
         valueSet.put("m", m);
+
+        System.out.println("valueSet = " + valueSet);
         FastmConfig.setTemplateDir("test");
         Parser.setParserContext("test");
 

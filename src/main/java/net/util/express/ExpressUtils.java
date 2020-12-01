@@ -1,10 +1,10 @@
 package net.util.express;
 
-import net.util.express.repoland.RepolandComputeITFImp;
+import net.util.express.repoland.RepolandCompute;
 
 public class ExpressUtils {
 	public static boolean judge(String express) {
-		ComputeITF computeITF = new RepolandComputeITFImp();
+		RepolandCompute computeITF = new RepolandCompute();
 		return computeITF.judge(express);
 	}
 }
