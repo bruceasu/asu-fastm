@@ -386,7 +386,7 @@ public class Parser {
 
     public static ITemplate parse(final String fileName, final String charsetName)
             throws IOException {
-        System.out.println("start parsing " + fileName);
+        //System.out.println("start parsing " + fileName);
         FileInputStream fileStream = new FileInputStream(fileName);
         ITemplate template = parse(fileStream, charsetName);
         fileStream.close();
